@@ -84,13 +84,13 @@ One deliberate engineering win here: **Commit Cadence and Contributor Concentrat
 **Can I defend it:** Yes. **Cadence *variance* (coefficient of variation) is deliberately dropped for v1** — not because the maths is hard (it's `stdev/mean`), but because most benchmark-set packages won't have 12+ stable release intervals for the number to mean anything yet. Reintroducing it in v2 once real interval data exists is the honest sequencing (§12).
 
 ### 5.3 Issue Resolution Health
-**Definition:** Over the trailing 180 days — resolution rate (closed / opened) and median days-to-close, computed from `created_at`/`closed_at` on the `/issues` endpoint, with pull requests excluded (the issues endpoint returns both; filter on the presence of a `pull_request` key).
+**Definition:** Over the trailing 180 days — resolution rate (closed / opened) and median days-to-close, computed from `created_at`/`closed_at` on the `/issues` endpoint, with pull requests excluded (the issues endpoint returns both; filter on the presence of a `pull_request` key). If opened issues over the trailing 180 days is 0, resolution rate is unavailable with null/insufficient_data rather than producing a numeric ratio.
 **Why:** Maintainer responsiveness is one of the strongest predictors of whether contributors stick around.
 **Can I collect it:** Yes, single paginated REST call.
 **Can I defend it:** Yes, with a disclosed weakness: v1 does **not** distinguish human closures from stale-bot closures (that requires per-issue event/label inspection, a real jump in call volume). This is flagged as a known limitation, not silently ignored — see §12 for the v2 fix.
 
 ### 5.4 Contributor Concentration
-**Definition:** `(commits by the single most active contributor) / (total human commits)`, trailing 12 months — reusing the data already pulled for §5.1. Lower is healthier.
+**Definition:** `(commits by the single most active contributor) / (total human commits)`, trailing 12 months — reusing the data already pulled for §5.1. Lower is healthier. If total human commits over the trailing 12 months is 0, the metric is unavailable with null/insufficient_data rather than producing a numeric ratio.
 **Why:** A direct, honest proxy for "how much does this project depend on one person," without pretending to compute the smallest-N-for-50% set that full Bus Factor requires.
 **Can I collect it:** Yes — free, from data already fetched.
 **Can I defend it:** Yes, and this is a good viva answer in itself: *"I chose a single ratio over the standard Bus Factor definition because Bus Factor requires an iterative ranking-and-accumulation step for marginal extra signal at this scale, and a single top-contributor ratio is transparent enough to sanity-check by eye against the GitHub contributors graph."* Same disclosed weakness as the original: penalizes small, excellent, single-expert utility packages. Not mitigated by archetype weighting in v1 — mitigated by disclosure and by the AI explanation layer surfacing it in context.
