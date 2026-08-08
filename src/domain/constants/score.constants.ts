@@ -4,3 +4,4 @@ export const CONFIDENCE_MIN = 0;
 export const CONFIDENCE_MAX = 100;
 export const COMPLETENESS_MIN = 0;
 export const COMPLETENESS_MAX = 100;
+export const METRICS_TOTAL_V1 = 6;
