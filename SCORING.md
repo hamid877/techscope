@@ -118,6 +118,29 @@ One deliberate engineering win here: **Commit Cadence and Contributor Concentrat
 
 - The complexity the original design paid for was the **archetype cohort split** (rank npm Utilities only against other npm Utilities). That's what's removed.
 - Plain percentile rank — sort every package's raw value for a metric, your score is `rank / N × 100` — is retained, because it's genuinely simple ("sort and find your position") *and* it keeps the robustness-to-outliers property the original document specifically wanted (one viral package no longer compresses everyone else toward zero, since rank order is unaffected by how extreme the outlier is).
+
+**Tie Handling:**
+Use average/fractional rank for tied raw values. For a tied group occupying positions `a` through `b` (1-indexed) in ascending sorted order: `averageRank = (a + b) / 2`.
+The percentile is calculated as `averageRank / N × 100`.
+
+**External Values:**
+For target values not present in the benchmark population:
+- Let `L` = count of reference values strictly less than the target.
+- Use virtual rank = `L + 1`.
+- The percentile is calculated as `rank / N × 100`.
+- Clamp the final percentile to `[0, 100]`.
+
+**Metric Direction:**
+The normalized percentile represents health, so lower-is-healthier metrics must be inverted (`healthPercentile = 100 - rawPercentile`). Higher-is-healthier metrics retain the normal percentile.
+
+**Explicit V1 Metric Directions:**
+- **Commit Cadence:** higher is healthier.
+- **Release Frequency:** higher is healthier.
+- **Issue Resolution Health:** requires explicit handling of its component directions. Normalize `resolutionRate` (higher is healthier) and `medianDaysToClose` (lower is healthier, invert percentile) independently. Combine with equal weighting `(resolutionRatePercentile + medianDaysToCloseHealthPercentile) / 2` and round to the nearest integer. If either target component is null, or if either required benchmark component population is empty, the metric is unavailable (do not partially average).
+- **Contributor Concentration:** lower is healthier.
+- **Download Momentum:** higher is healthier.
+- **Documentation Presence:** higher is healthier.
+
 - A useful side effect: because percentile rank only cares about *order*, not magnitude, the log-transform-before-ranking step the original design needed for skewed metrics (downloads) becomes unnecessary for ranking purposes — rank is invariant to any monotonic transform. (The log transform inside the *growth* calculation in §5.5 is a different thing — it changes which packages count as "growing more," not just the scale — and is still needed there.)
 - **Cold-start handling:** ranking against a fixed, curated 50–100 package set instead of a live growing corpus means normalization is cheap, static, and doesn't need a "recompute every percentile on every new ingest" pipeline. A package outside the benchmark set is ranked against it as an external reference population — simple to implement, easy to explain.
 
