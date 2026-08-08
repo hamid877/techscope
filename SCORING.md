@@ -150,6 +150,8 @@ For the set of available metrics **A** (weights `w_i` summing to 1.0 across all 
 HealthScore = ( Σ_{i∈A} w_i · P_i ) / ( Σ_{i∈A} w_i )
 ```
 
+The final weighted-average Health Score is rounded to the nearest integer before being represented as the 0–100 Health Score.
+
 This is a straightforward weighted average that automatically redistributes weight across whatever metrics are actually available — no separate redistribution logic needed, it falls out of the formula. If fewer than 4 of the 6 metrics are available, the API returns `insufficient_data` instead of a score built on a minority of the model.
 
 ---
