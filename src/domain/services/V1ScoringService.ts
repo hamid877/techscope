@@ -80,10 +80,18 @@ function processMetric<TSignal, TRawValue>(
  * 3. Creates MetricResult objects.
  * 4. Passes results to calculateV1Score.
  */
-export function orchestrateV1Scoring(
+export interface V1ScoringResult {
+  score: Score;
+  metrics: MetricResult[];
+}
+
+/**
+ * Orchestrates the full V1 deterministic scoring pipeline and returns the exact metric breakdown.
+ */
+export function computeV1MetricsBreakdown(
   signals: V1MetricSignals,
   populations: V1BenchmarkPopulations,
-): Score {
+): MetricResult[] {
   const commitCadenceResult = processMetric(
     signals.commitCadence,
     'commit_cadence',
@@ -135,12 +143,39 @@ export function orchestrateV1Scoring(
     (raw) => calculatePercentileRank(raw, populations.documentationPresence, true),
   );
 
-  return calculateV1Score([
+  return [
     commitCadenceResult,
     releaseFrequencyResult,
     issueResolutionHealthResult,
     contributorConcentrationResult,
     downloadMomentumResult,
     documentationPresenceResult,
-  ]);
+  ];
+}
+
+/**
+ * Orchestrates the full V1 deterministic scoring pipeline and returns the exact metric breakdown.
+ */
+export function orchestrateV1ScoringWithMetrics(
+  signals: V1MetricSignals,
+  populations: V1BenchmarkPopulations,
+): V1ScoringResult {
+  const metrics = computeV1MetricsBreakdown(signals, populations);
+
+  return {
+    score: calculateV1Score(metrics),
+    metrics
+  };
+}
+
+/**
+ * Orchestrates the full V1 deterministic scoring pipeline.
+ *
+ * It accepts raw metric signals and reference populations, and produces a final Health Score.
+ */
+export function orchestrateV1Scoring(
+  signals: V1MetricSignals,
+  populations: V1BenchmarkPopulations,
+): Score {
+  return orchestrateV1ScoringWithMetrics(signals, populations).score;
 }

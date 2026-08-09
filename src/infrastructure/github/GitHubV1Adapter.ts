@@ -210,4 +210,12 @@ export class GitHubV1Adapter {
       }
     };
   }
+
+  async getRepositoryMetadata(owner: string, repo: string): Promise<{ createdAt: string } | null> {
+    const res = await this.client.request<{ created_at: string }>(`/repos/${owner}/${repo}`);
+    if (res.status === 200 && res.data) {
+      return { createdAt: res.data.created_at };
+    }
+    return null;
+  }
 }
