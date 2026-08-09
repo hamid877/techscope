@@ -6,6 +6,8 @@ export type BenchmarkTier = 'Thriving' | 'Stable' | 'Declining' | 'Abandoned';
 export interface BenchmarkEntry {
   registry: Registry;
   packageName: string;
+  githubOwner?: string;
+  githubRepo?: string;
   tier: BenchmarkTier;
   justification: string;
 }
