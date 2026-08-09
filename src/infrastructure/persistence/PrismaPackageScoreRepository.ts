@@ -32,6 +32,23 @@ export class PrismaPackageScoreRepository implements PackageScoreRepository {
     };
   }
 
+  async findAll(): Promise<PackageScoreRecord[]> {
+    const records = await this.prisma.packageScore.findMany();
+    return records.map(record => ({
+      packageName: record.packageName,
+      registry: record.registry as Registry,
+      status: record.status as 'success' | 'unsupported_or_unresolved' | 'insufficient_data',
+      healthScore: record.healthScore,
+      metricsAvailable: record.metricsAvailable,
+      metricsTotal: record.metricsTotal,
+      methodologyVersion: record.methodologyVersion,
+      isProvisional: record.isProvisional,
+      metricsBreakdown: record.metricsBreakdown ? JSON.parse(record.metricsBreakdown) : null,
+      calculatedAt: record.calculatedAt,
+      refreshedAt: record.refreshedAt
+    }));
+  }
+
   async save(record: PackageScoreRecord): Promise<void> {
     await this.prisma.packageScore.upsert({
       where: {

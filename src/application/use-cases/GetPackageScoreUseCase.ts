@@ -3,10 +3,15 @@ import { PackageScoreRecord, PackageScoreRepository } from '../interfaces/Packag
 import { PackageResolutionService } from '../../infrastructure/registry/PackageResolutionService';
 import { SignalCollectionService } from '../services/SignalCollectionService';
 import { GetBenchmarkSnapshotUseCase } from './GetBenchmarkSnapshotUseCase';
-import { computeV1MetricsBreakdown } from '../../domain/services/V1ScoringService';
+import { computeV1MetricsBreakdown, V1BenchmarkPopulations } from '../../domain/services/V1ScoringService';
 import { InsufficientMetricDataError } from '../../domain/errors/InsufficientMetricDataError';
 import { GitHubV1Adapter } from '../../infrastructure/github/GitHubV1Adapter';
 import { calculateV1Score } from '../../domain/services/ScoringService';
+
+export interface GetPackageScoreOptions {
+  forceRefresh?: boolean;
+  populations?: V1BenchmarkPopulations;
+}
 
 export class GetPackageScoreUseCase {
   constructor(
@@ -17,10 +22,12 @@ export class GetPackageScoreUseCase {
     private readonly githubAdapter: GitHubV1Adapter = new GitHubV1Adapter()
   ) {}
 
-  async execute(packageName: string, registry: Registry): Promise<PackageScoreRecord> {
-    const existing = await this.repository.findByPackageAndRegistry(packageName, registry);
-    if (existing) {
-      return existing;
+  async execute(packageName: string, registry: Registry, options?: GetPackageScoreOptions): Promise<PackageScoreRecord> {
+    if (!options?.forceRefresh) {
+      const existing = await this.repository.findByPackageAndRegistry(packageName, registry);
+      if (existing) {
+        return existing;
+      }
     }
 
     const resolution = await this.resolutionService.resolve(packageName, registry);
@@ -59,7 +66,7 @@ export class GetPackageScoreUseCase {
       }
     }
 
-    const populations = await this.getBenchmarkSnapshotUseCase.execute();
+    const populations = options?.populations ?? await this.getBenchmarkSnapshotUseCase.execute();
 
     const signals = await this.signalCollectionService.collectSignals(
       registry,

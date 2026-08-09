@@ -16,5 +16,6 @@ export interface PackageScoreRecord {
 
 export interface PackageScoreRepository {
   findByPackageAndRegistry(packageName: string, registry: Registry): Promise<PackageScoreRecord | null>;
+  findAll(): Promise<PackageScoreRecord[]>;
   save(record: PackageScoreRecord): Promise<void>;
 }

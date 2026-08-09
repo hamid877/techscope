@@ -12,6 +12,10 @@ class MockPackageScoreRepository implements PackageScoreRepository {
   async findByPackageAndRegistry(packageName: string, registry: any): Promise<PackageScoreRecord | null> {
     return null;
   }
+  async findAll(): Promise<PackageScoreRecord[]> {
+    return [];
+  }
+
   async save(record: PackageScoreRecord): Promise<void> {}
 }
 
