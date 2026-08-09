@@ -1,0 +1,35 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model PackageScore {
+  id                 String   @id @default(uuid())
+  packageName        String
+  registry           String
+
+  status             String
+  healthScore        Int?
+  metricsAvailable   Int?
+  metricsTotal       Int?
+  methodologyVersion String
+  isProvisional      Boolean  @default(false)
+
+  metricsBreakdown   String?
+
+  calculatedAt       DateTime @default(now())
+  refreshedAt        DateTime @default(now())
+
+  @@unique([packageName, registry])
+  @@index([refreshedAt])
+}
+
+model BenchmarkSnapshot {
+  id                 Int      @id @default(1)
+  methodologyVersion String
+  populations        String
+  updatedAt          DateTime @default(now())
+}
