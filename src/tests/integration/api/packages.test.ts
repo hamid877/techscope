@@ -9,6 +9,9 @@ vi.mock('@prisma/client', () => {
   };
 });
 
+// Shared test date used in mock records
+const TEST_DATE = new Date('2026-01-01T00:00:00.000Z');
+
 describe('GET /api/v1/packages', () => {
   let executeSpy: MockInstance;
 
@@ -31,7 +34,9 @@ describe('GET /api/v1/packages', () => {
       isProvisional: false,
       metricsBreakdown: [
         { metric: 'commit_cadence', percentile: 80, weight: 0.20 }
-      ]
+      ],
+      calculatedAt: TEST_DATE,
+      refreshedAt: TEST_DATE,
     });
 
     const response = await GET(createRequest('/api/v1/packages?name=react&registry=npm'));
@@ -42,6 +47,7 @@ describe('GET /api/v1/packages', () => {
     expect(data.reason).toBeNull();
     expect(data.methodology_version).toBe('1.0');
     expect(data.provisional).toBe(false);
+    expect(data.refreshed_at).toBe(TEST_DATE.toISOString());
     expect(data.completeness).toEqual({
       health_score: 74,
       metrics_available: 5,
@@ -61,13 +67,16 @@ describe('GET /api/v1/packages', () => {
       metricsTotal: 6,
       methodologyVersion: '1.0',
       isProvisional: false,
-      metricsBreakdown: []
+      metricsBreakdown: [],
+      calculatedAt: TEST_DATE,
+      refreshedAt: TEST_DATE,
     });
 
     const response = await GET(createRequest('/api/v1/packages?name=requests&registry=pypi'));
     expect(response.status).toBe(200);
     const data = await response.json();
     expect(data.score).toBe(85);
+    expect(data.refreshed_at).toBe(TEST_DATE.toISOString());
     expect(executeSpy).toHaveBeenCalledWith('requests', 'pypi');
   });
 
@@ -107,7 +116,9 @@ describe('GET /api/v1/packages', () => {
       metricsTotal: null,
       methodologyVersion: '1.0',
       isProvisional: false,
-      metricsBreakdown: null
+      metricsBreakdown: null,
+      calculatedAt: TEST_DATE,
+      refreshedAt: TEST_DATE,
     });
 
     const response = await GET(createRequest('/api/v1/packages?name=unknown-pkg&registry=npm'));
@@ -129,7 +140,9 @@ describe('GET /api/v1/packages', () => {
       isProvisional: true,
       metricsBreakdown: [
         { metric: 'commit_cadence', percentile: null, weight: 0.20 }
-      ]
+      ],
+      calculatedAt: TEST_DATE,
+      refreshedAt: TEST_DATE,
     });
 
     const response = await GET(createRequest('/api/v1/packages?name=small-pkg&registry=npm'));
@@ -139,6 +152,7 @@ describe('GET /api/v1/packages', () => {
     expect(data.reason).toBe('insufficient_data');
     expect(data.methodology_version).toBe('1.0');
     expect(data.provisional).toBe(true);
+    expect(data.refreshed_at).toBe(TEST_DATE.toISOString());
     expect(data.completeness).toEqual({
       health_score: null,
       metrics_available: 2,
@@ -149,7 +163,7 @@ describe('GET /api/v1/packages', () => {
     ]);
   });
 
-  it('9. Successful response contains expected fields', async () => {
+  it('9. Successful response contains expected fields including refreshed_at', async () => {
     executeSpy.mockResolvedValue({
       status: 'success',
       healthScore: 90,
@@ -159,7 +173,9 @@ describe('GET /api/v1/packages', () => {
       isProvisional: false,
       metricsBreakdown: [
         { metric: 'commit_cadence', percentile: 95, weight: 0.20 }
-      ]
+      ],
+      calculatedAt: TEST_DATE,
+      refreshedAt: TEST_DATE,
     });
 
     const response = await GET(createRequest('/api/v1/packages?name=react&registry=npm'));
@@ -171,6 +187,7 @@ describe('GET /api/v1/packages', () => {
     expect(data).toHaveProperty('provisional');
     expect(data).toHaveProperty('completeness');
     expect(data).toHaveProperty('metrics');
+    expect(data).toHaveProperty('refreshed_at');
   });
 
   it('10. Internal/unexpected failure returns HTTP 500 without exposing internal error details', async () => {
@@ -199,12 +216,35 @@ describe('GET /api/v1/packages', () => {
       metricsTotal: 6,
       methodologyVersion: '1.0',
       isProvisional: false,
-      metricsBreakdown: []
+      metricsBreakdown: [],
+      calculatedAt: TEST_DATE,
+      refreshedAt: TEST_DATE,
     });
 
     await GET(createRequest('/api/v1/packages?name=test-pkg&registry=npm'));
 
     expect(executeSpy).toHaveBeenCalledTimes(1);
     expect(executeSpy).toHaveBeenCalledWith('test-pkg', 'npm');
+  });
+
+  it('12. Score of 0 renders correctly (not falsy-hidden)', async () => {
+    executeSpy.mockResolvedValue({
+      status: 'success',
+      healthScore: 0,
+      metricsAvailable: 4,
+      metricsTotal: 6,
+      methodologyVersion: '1.0',
+      isProvisional: false,
+      metricsBreakdown: [],
+      calculatedAt: TEST_DATE,
+      refreshedAt: TEST_DATE,
+    });
+
+    const response = await GET(createRequest('/api/v1/packages?name=abandoned-pkg&registry=npm'));
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    // Score 0 must be returned as 0, not null/undefined
+    expect(data.score).toBe(0);
+    expect(data.reason).toBeNull();
   });
 });

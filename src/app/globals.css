@@ -1,26 +1,119 @@
 @import "tailwindcss";
 
+/* ─── Design tokens ────────────────────────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Surface */
+  --bg-base:      #0d0d0f;
+  --bg-surface:   #17171a;
+  --bg-elevated:  #1e1e23;
+  --bg-hover:     #26262e;
+
+  /* Borders */
+  --border:       #2a2a34;
+  --border-focus: #6366f1;
+
+  /* Text */
+  --text-primary:   #f4f4f5;
+  --text-secondary: #a1a1aa;
+  --text-muted:     #52525b;
+
+  /* Accent (indigo) */
+  --accent:          #6366f1;
+  --accent-hover:    #818cf8;
+  --accent-subtle:   #1e1b4b;
+
+  /* Semantic state colours */
+  --state-provisional:   #f59e0b;   /* amber  */
+  --state-provisional-bg:#451a03;
+  --state-insufficient:  #f97316;   /* orange */
+  --state-insufficient-bg:#431407;
+  --state-unresolved:    #6b7280;   /* gray   */
+  --state-unresolved-bg: #1c1c1e;
+  --state-success:       #10b981;   /* emerald*/
+  --state-caveat:        #facc15;   /* yellow */
+  --state-caveat-bg:     #422006;
+
+  /* Misc */
+  --radius:   0.5rem;
+  --radius-lg: 0.75rem;
 }
 
+/* ─── Tailwind v4 theme mapping ─────────────────────────────────────────────── */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--bg-base);
+  --color-foreground: var(--text-primary);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ─── Base reset ────────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-base);
+  color: var(--text-primary);
+}
+
+/* ─── Focus ring (WCAG 2.1 AA) ─────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius);
+}
+
+/* ─── Typography helpers ────────────────────────────────────────────────────── */
+.text-muted   { color: var(--text-muted); }
+.text-secondary { color: var(--text-secondary); }
+
+/* ─── Card surface ──────────────────────────────────────────────────────────── */
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+/* ─── Metric status badge ───────────────────────────────────────────────────── */
+.badge-unavailable {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: var(--bg-hover);
+  color: var(--text-muted);
+}
+
+/* ─── Spinner ───────────────────────────────────────────────────────────────── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.spinner {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+/* ─── Score ring gradient helper ────────────────────────────────────────────── */
+.score-display {
+  font-variant-numeric: tabular-nums;
 }

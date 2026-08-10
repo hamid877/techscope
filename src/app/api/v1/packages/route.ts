@@ -64,6 +64,7 @@ export async function GET(request: Request) {
         reason: 'insufficient_data',
         methodology_version: result.methodologyVersion,
         provisional: result.isProvisional,
+        refreshed_at: result.refreshedAt.toISOString(),
         completeness: {
           health_score: null,
           metrics_available: result.metricsAvailable,
@@ -83,6 +84,7 @@ export async function GET(request: Request) {
       reason: null,
       methodology_version: result.methodologyVersion,
       provisional: result.isProvisional,
+      refreshed_at: result.refreshedAt.toISOString(),
       completeness: {
         health_score: result.healthScore,
         metrics_available: result.metricsAvailable,
