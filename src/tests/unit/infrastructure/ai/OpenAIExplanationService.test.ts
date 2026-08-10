@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, beforeAll, afterAll } from 'vitest';
 import { OpenAIExplanationService } from '../../../../../src/infrastructure/ai/OpenAIExplanationService';
 import { ExplanationPromptDTO } from '../../../../../src/infrastructure/ai/ExplanationService';
 import OpenAI from 'openai';
@@ -20,13 +20,48 @@ vi.mock('openai', () => {
 describe('OpenAIExplanationService', () => {
   let service: OpenAIExplanationService;
   let mockCreate: ReturnType<typeof vi.fn>;
+  let originalEnvKey: string | undefined;
+
+  beforeAll(() => {
+    originalEnvKey = process.env.OPENAI_API_KEY;
+  });
+
+  afterAll(() => {
+    if (originalEnvKey === undefined) {
+      delete process.env.OPENAI_API_KEY;
+    } else {
+      process.env.OPENAI_API_KEY = originalEnvKey;
+    }
+  });
 
   beforeEach(() => {
     vi.resetAllMocks();
+    process.env.OPENAI_API_KEY = 'test-key';
     service = new OpenAIExplanationService();
-    // Re-acquire the mocked create function to set return values per test
     const openaiInstance = new OpenAI();
     mockCreate = openaiInstance.chat.completions.create as ReturnType<typeof vi.fn>;
+  });
+
+  it('can be imported and constructed without an API key', () => {
+    delete process.env.OPENAI_API_KEY;
+    expect(() => new OpenAIExplanationService()).not.toThrow();
+  });
+
+  it('fails cleanly when generation is requested but the API key is missing', async () => {
+    delete process.env.OPENAI_API_KEY;
+    const dto: ExplanationPromptDTO = {
+      healthScore: 80,
+      isProvisional: false,
+      completeness: { available: 6, total: 6 },
+      metrics: [],
+      caveats: {
+        hasLowerConfidenceDownloadMomentum: false,
+        hasHighContributorConcentration: false
+      }
+    };
+
+    // The catch block logs and rethrows a safe internal error message
+    await expect(service.generateExplanation(dto)).rejects.toThrow('Failed to generate AI explanation.');
   });
 
   it('generates an explanation successfully and respects prompt constraints', async () => {

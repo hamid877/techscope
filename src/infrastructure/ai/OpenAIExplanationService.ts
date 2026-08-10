@@ -2,13 +2,9 @@ import OpenAI from 'openai';
 import { ExplanationPromptDTO, ExplanationService } from './ExplanationService';
 
 export class OpenAIExplanationService implements ExplanationService {
-  private openai: OpenAI;
   private model: string;
 
   constructor() {
-    this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
     this.model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
   }
 
@@ -16,7 +12,15 @@ export class OpenAIExplanationService implements ExplanationService {
     const prompt = this.buildPrompt(dto);
 
     try {
-      const response = await this.openai.chat.completions.create({
+      if (!process.env.OPENAI_API_KEY) {
+        throw new Error('OPENAI_API_KEY is not configured');
+      }
+
+      const openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+      });
+
+      const response = await openai.chat.completions.create({
         model: this.model,
         messages: [
           {
