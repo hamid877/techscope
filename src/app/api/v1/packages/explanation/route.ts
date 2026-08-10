@@ -1,13 +1,9 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/persistence/prisma/client';
 import { PrismaPackageScoreRepository } from '@/infrastructure/persistence/PrismaPackageScoreRepository';
 import { GenerateExplanationUseCase } from '@/application/use-cases/GenerateExplanationUseCase';
 import { OpenAIExplanationService } from '@/infrastructure/ai/OpenAIExplanationService';
 import { Registry } from '@/domain/types/registry';
-
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
-const prisma = globalForPrisma.prisma || new PrismaClient();
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
 const repository = new PrismaPackageScoreRepository(prisma);
 const explanationService = new OpenAIExplanationService();

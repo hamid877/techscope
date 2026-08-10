@@ -43,3 +43,9 @@ next-env.d.ts
 
 # Antigravity
 .gemini/
+
+# Local SQLite database
+/dev.db
+
+# Local development scratch files
+/scratch/

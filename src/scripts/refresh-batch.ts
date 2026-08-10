@@ -2,7 +2,7 @@ import { CreateBenchmarkSnapshotUseCase } from '../application/use-cases/CreateB
 import { GetBenchmarkSnapshotUseCase } from '../application/use-cases/GetBenchmarkSnapshotUseCase';
 import { GetPackageScoreUseCase } from '../application/use-cases/GetPackageScoreUseCase';
 import { PackageScoreRepository } from '../application/interfaces/PackageScoreRepository';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/persistence/prisma/client';
 import { PrismaBenchmarkSnapshotRepository } from '../infrastructure/persistence/PrismaBenchmarkSnapshotRepository';
 import { PrismaPackageScoreRepository } from '../infrastructure/persistence/PrismaPackageScoreRepository';
 import { PackageResolutionService } from '../infrastructure/registry/PackageResolutionService';
@@ -106,7 +106,6 @@ export async function runRefreshBatch(
 
 // Auto-execute if run directly from CLI
 if (typeof require !== 'undefined' && require.main === module) {
-  const prisma = new PrismaClient();
   const benchmarkRepo = new PrismaBenchmarkSnapshotRepository(prisma);
   const packageScoreRepo = new PrismaPackageScoreRepository(prisma);
   const githubClient = new GitHubClient();
