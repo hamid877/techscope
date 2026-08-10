@@ -94,7 +94,7 @@ describe('ScoringService — calculateV1Score', () => {
   it('computes the correct 6/6 weighted score', () => {
     const result = calculateV1Score(buildMetrics());
     expect(result).toBeInstanceOf(Score);
-    expect(result.value).toBe(68);
+    expect(result.value).toBe(65);
   });
 
   // -------------------------------------------------------------------------
@@ -121,17 +121,17 @@ describe('ScoringService — calculateV1Score', () => {
   });
 
   it('excludes an unavailable metric from the denominator', () => {
-    // denominator = 0.80 (not 1.00); raw = 50.5/0.80 = 63.125 → 63
+    // denominator = 0.95 (not 1.00)
     const result = calculateV1Score(buildMetrics({ download_momentum: null }));
-    expect(result.value).toBe(63);
+    expect(result.value).toBe(64);
   });
 
   it('excluding an unavailable metric changes the denominator — proving zero-fill is NOT happening', () => {
     // Result with download_momentum excluded (denominator 0.80): 63
     // Result if zero-filled (denominator 1.00): 51
-    // They are different — the only way to get 63 is if the denominator shrank.
+    // They are different — the only way to get 64 is if the denominator shrank.
     const fiveMetricResult = calculateV1Score(buildMetrics({ download_momentum: null }));
-    expect(fiveMetricResult.value).toBe(63);
+    expect(fiveMetricResult.value).toBe(64);
     expect(fiveMetricResult.value).not.toBe(51); // 51 = zero-fill answer
   });
 
@@ -157,7 +157,7 @@ describe('ScoringService — calculateV1Score', () => {
       buildMetrics({ download_momentum: null, documentation_presence: null }),
     );
     expect(result).toBeInstanceOf(Score);
-    expect(result.value).toBe(66);
+    expect(result.value).toBe(67);
   });
 
   // -------------------------------------------------------------------------

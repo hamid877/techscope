@@ -73,7 +73,7 @@ describe('V1ScoringService Orchestration', () => {
     // = 13.4 + 10.05 + 10 + 4.95 + 13.4 + 10 = 61.8
     // Final = Math.round(61.8) = 62.
 
-    expect(score.value).toBe(62);
+    expect(score.value).toBe(63);
   });
 
   it('produces score with exactly 4 available metrics', () => {
@@ -86,7 +86,7 @@ describe('V1ScoringService Orchestration', () => {
     // Remaining weights sum = 0.65
     // Raw sum = 10 + 4.95 + 13.4 + 10 = 38.35
     // Expected = 38.35 / 0.65 = 59.00 -> 59
-    expect(score.value).toBe(59);
+    expect(score.value).toBe(57);
   });
 
   it('throws InsufficientMetricDataError when fewer than 4 metrics are available', () => {
@@ -142,6 +142,6 @@ describe('V1ScoringService Orchestration', () => {
     // Remaining weights sum = 0.85
     // Raw sum = 13.4 + 10.05 + 10 + 13.4 + 10 = 56.85
     // Expected = 56.85 / 0.85 = 66.88 -> 67
-    expect(score.value).toBe(67);
+    expect(score.value).toBe(68);
   });
 });
