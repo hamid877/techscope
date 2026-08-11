@@ -21,21 +21,31 @@ export class GitHubClient {
   async request<T>(endpoint: string, options?: RequestInit, retryCount = 0): Promise<{ status: number; data: T | null; headers: Headers; isRateLimited: boolean }> {
     const url = endpoint.startsWith('http') ? endpoint : `${this.baseUrl}${endpoint}`;
 
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        ...this.getHeaders(),
-        ...options?.headers
-      }
-    });
+const response = await fetch(url, {
+  ...options,
+  headers: {
+    ...this.getHeaders(),
+    ...options?.headers
+  }
+});
 
-    if (response.status === 202) {
-      if (retryCount < 5) {
-        // Retry after backoff: 1s, 2s, 4s, 8s, 16s
-        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retryCount)));
-        return this.request<T>(endpoint, options, retryCount + 1);
-      }
-    }
+console.log('[GitHub]', {
+  endpoint,
+  status: response.status,
+  hasToken: Boolean(this.token),
+  rateLimitRemaining: response.headers.get('x-ratelimit-remaining'),
+  rateLimitLimit: response.headers.get('x-ratelimit-limit'),
+});
+
+if (response.status === 202) {
+  if (retryCount < 5) {
+    // Retry after backoff: 1s, 2s, 4s, 8s, 16s
+    await new Promise(resolve =>
+      setTimeout(resolve, 1000 * Math.pow(2, retryCount))
+    );
+    return this.request<T>(endpoint, options, retryCount + 1);
+  }
+}
 
     let data: T | null = null;
     if (response.ok && response.status !== 204 && response.status !== 202) {
