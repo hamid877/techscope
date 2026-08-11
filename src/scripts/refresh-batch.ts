@@ -1,16 +1,10 @@
+import 'dotenv/config';
+
 import { CreateBenchmarkSnapshotUseCase } from '../application/use-cases/CreateBenchmarkSnapshotUseCase';
 import { GetBenchmarkSnapshotUseCase } from '../application/use-cases/GetBenchmarkSnapshotUseCase';
 import { GetPackageScoreUseCase } from '../application/use-cases/GetPackageScoreUseCase';
 import { PackageScoreRepository } from '../application/interfaces/PackageScoreRepository';
-import { prisma } from '@/persistence/prisma/client';
-import { PrismaBenchmarkSnapshotRepository } from '../infrastructure/persistence/PrismaBenchmarkSnapshotRepository';
-import { PrismaPackageScoreRepository } from '../infrastructure/persistence/PrismaPackageScoreRepository';
-import { PackageResolutionService } from '../infrastructure/registry/PackageResolutionService';
-import { SignalCollectionService } from '../application/services/SignalCollectionService';
-import { GitHubV1Adapter } from '../infrastructure/github/GitHubV1Adapter';
-import { NpmV1Adapter } from '../infrastructure/registry/NpmV1Adapter';
-import { PyPIV1Adapter } from '../infrastructure/registry/PyPIV1Adapter';
-import { GitHubClient } from '../infrastructure/github/GitHubClient';
+import { createRefreshBatchDependencies } from '@/infrastructure/composition/createRefreshBatchDependencies';
 
 export interface RunRefreshBatchOptions {
   packageDelayMs?: number;
@@ -105,49 +99,22 @@ export async function runRefreshBatch(
 }
 
 // Auto-execute if run directly from CLI
+// Auto-execute if run directly from CLI
 if (typeof require !== 'undefined' && require.main === module) {
-  const benchmarkRepo = new PrismaBenchmarkSnapshotRepository(prisma);
-  const packageScoreRepo = new PrismaPackageScoreRepository(prisma);
-  const githubClient = new GitHubClient();
-  const githubAdapter = new GitHubV1Adapter(githubClient);
-  const npmAdapter = new NpmV1Adapter();
-  const pypiAdapter = new PyPIV1Adapter();
+  const dependencies = createRefreshBatchDependencies();
 
-  const createBenchmarkSnapshotUseCase = new CreateBenchmarkSnapshotUseCase(
-    benchmarkRepo,
-    githubAdapter,
-    npmAdapter,
-    pypiAdapter
-  );
+  runRefreshBatch(dependencies)
+    .then(async () => {
+      const { prisma } = await import('@/persistence/prisma/client');
+      await prisma.$disconnect();
+      process.exit(0);
+    })
+    .catch(async (err) => {
+      console.error(err);
 
-  const getBenchmarkSnapshotUseCase = new GetBenchmarkSnapshotUseCase(benchmarkRepo);
+      const { prisma } = await import('@/persistence/prisma/client');
+      await prisma.$disconnect();
 
-  const packageResolutionService = new PackageResolutionService();
-  const signalCollectionService = new SignalCollectionService(
-    githubAdapter,
-    npmAdapter,
-    pypiAdapter
-  );
-
-  const getPackageScoreUseCase = new GetPackageScoreUseCase(
-    packageScoreRepo,
-    packageResolutionService,
-    signalCollectionService,
-    getBenchmarkSnapshotUseCase,
-    githubAdapter
-  );
-
-  runRefreshBatch({
-    createBenchmarkSnapshotUseCase,
-    getBenchmarkSnapshotUseCase,
-    getPackageScoreUseCase,
-    packageScoreRepository: packageScoreRepo,
-  }).then(async () => {
-    await prisma.$disconnect();
-    process.exit(0);
-  }).catch(async (err) => {
-    console.error(err);
-    await prisma.$disconnect();
-    process.exit(1);
-  });
+      process.exit(1);
+    });
 }

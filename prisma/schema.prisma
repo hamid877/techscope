@@ -3,23 +3,20 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 model PackageScore {
   id                 String   @id @default(uuid())
   packageName        String
   registry           String
-
   status             String
   healthScore        Int?
   metricsAvailable   Int?
   metricsTotal       Int?
   methodologyVersion String
   isProvisional      Boolean  @default(false)
-
   metricsBreakdown   String?
-
   calculatedAt       DateTime @default(now())
   refreshedAt        DateTime @default(now())
 
