@@ -68,3 +68,55 @@ export function createRefreshBatchDependencies(): RefreshBatchDependencies {
     packageScoreRepository,
   };
 }
+
+// ---------------------------------------------------------------------------
+// Narrow dependency set for package-only refresh (no benchmark generation).
+// Used by the Vercel cron route so it never constructs CreateBenchmarkSnapshotUseCase.
+// ---------------------------------------------------------------------------
+
+export interface PackageRefreshDependencies {
+  getBenchmarkSnapshotUseCase: GetBenchmarkSnapshotUseCase;
+  getPackageScoreUseCase: GetPackageScoreUseCase;
+  packageScoreRepository: PackageScoreRepository;
+}
+
+export function createPackageRefreshDependencies(): PackageRefreshDependencies {
+  const benchmarkRepository =
+    new PrismaBenchmarkSnapshotRepository(prisma);
+
+  const packageScoreRepository =
+    new PrismaPackageScoreRepository(prisma);
+
+  const githubClient = new GitHubClient();
+  const githubAdapter = new GitHubV1Adapter(githubClient);
+  const npmAdapter = new NpmV1Adapter();
+  const pypiAdapter = new PyPIV1Adapter();
+
+  const getBenchmarkSnapshotUseCase =
+    new GetBenchmarkSnapshotUseCase(benchmarkRepository);
+
+  const packageResolutionService =
+    new PackageResolutionService();
+
+  const signalCollectionService =
+    new SignalCollectionService(
+      githubAdapter,
+      npmAdapter,
+      pypiAdapter
+    );
+
+  const getPackageScoreUseCase =
+    new GetPackageScoreUseCase(
+      packageScoreRepository,
+      packageResolutionService,
+      signalCollectionService,
+      getBenchmarkSnapshotUseCase,
+      githubAdapter
+    );
+
+  return {
+    getBenchmarkSnapshotUseCase,
+    getPackageScoreUseCase,
+    packageScoreRepository,
+  };
+}

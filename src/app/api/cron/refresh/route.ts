@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { createRefreshBatchDependencies } from '@/infrastructure/composition/createRefreshBatchDependencies';
-import { runRefreshBatch } from '@/scripts/refresh-batch';
+import { createPackageRefreshDependencies } from '@/infrastructure/composition/createRefreshBatchDependencies';
+import { runPackageRefreshBatch } from '@/scripts/refresh-packages';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
@@ -34,9 +34,9 @@ export async function GET(request: Request) {
   try {
     console.log('[cron/refresh] Starting scheduled refresh...');
 
-    const dependencies = createRefreshBatchDependencies();
+    const dependencies = createPackageRefreshDependencies();
 
-    const summary = await runRefreshBatch(dependencies);
+    const summary = await runPackageRefreshBatch(dependencies);
 
     console.log('[cron/refresh] Scheduled refresh completed.', summary);
 

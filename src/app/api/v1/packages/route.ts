@@ -54,9 +54,7 @@ export async function GET(request: Request) {
 
     const registry = registryRaw as Registry;
 
-    const result = await getPackageScoreUseCase.execute(name, registry, {
-  forceRefresh: true,
-});
+    const result = await getPackageScoreUseCase.execute(name, registry);
 
     if (result.status === 'unsupported_or_unresolved') {
       return NextResponse.json(
